@@ -1,5 +1,8 @@
 #include <QtWidgets>
 
+#define FLASH_TIME 2000
+#define FLASH_INTERVAL 200
+
 class LightWidget : public QWidget
 {
     Q_OBJECT
@@ -30,7 +33,7 @@ public slots:
             return;
         }
         flash();
-        mTimer.start(500);
+        mTimer.start(FLASH_INTERVAL);
     }
 
     void stopFlash() {
@@ -77,13 +80,10 @@ public:
         mTimerLabel->setAlignment(Qt::AlignCenter);
         vbox->addWidget(mTimerLabel);
         mRed = new LightWidget(Qt::red);
-        connect(this, SIGNAL(startFlash()), mRed, SLOT(startFlash()));
         vbox->addWidget(mRed);
         mYellow = new LightWidget(Qt::yellow);
-        connect(this, SIGNAL(startFlash()), mYellow, SLOT(startFlash()));
         vbox->addWidget(mYellow);
         mGreen = new LightWidget(Qt::green);
-        connect(this, SIGNAL(startFlash()), mGreen, SLOT(startFlash()));
         vbox->addWidget(mGreen);
 
         QPalette pal = palette();
@@ -94,9 +94,6 @@ public:
         mTimerValue = 0;
         mTimer.connect(&mTimer, SIGNAL(timeout()), this, SLOT(updateCounter()));
     }
-
-signals:
-    void startFlash();
 
 public slots:
     void startCounter() {
@@ -110,10 +107,6 @@ private slots:
     void updateCounter() {
         QString text("<font color=red size=20><b>%1</b></font>");
         mTimerLabel->setText(text.arg(mTimerValue));
-
-        if (mTimerValue <= 3) {
-            emit startFlash();
-        }
         mTimerValue -= 1;
     }
 
@@ -149,6 +142,18 @@ private:
     int mDuration;
 };
 
+/**
+ * @brief createLightState create the light state.
+ *        Light state have 3 sub states: alwaysOnState -> flashState -> done
+ *        alwaysOnState: duration - 2 seconds, the light is always on
+ *        flashState: 2 seconds, the light is flashed
+ *        done: light is off and the flash is stop
+ * @param traficWidget
+ * @param lightWidget
+ * @param duration
+ * @param parent
+ * @return the light state
+ */
 QState *createLightState(TraficLightWidget *traficWidget,
                          LightWidget *lightWidget,
                          int duration,
@@ -156,20 +161,29 @@ QState *createLightState(TraficLightWidget *traficWidget,
 {
     QState *lightState = new LightState(duration, parent);
     QTimer *timer = new QTimer(lightState);
-    timer->setInterval(duration);
+    timer->setInterval(qMax(duration - FLASH_TIME, 0));
     timer->setSingleShot(true);
 
-    QState *timingState = new QState(lightState);
-    timingState->connect(timingState, SIGNAL(entered()), lightWidget, SLOT(turnOn()));
-    timingState->connect(timingState, SIGNAL(entered()), timer, SLOT(start()));
-    timingState->connect(timingState, SIGNAL(exited()), lightWidget, SLOT(turnOff()));
-    timingState->connect(timingState, SIGNAL(exited()), lightWidget, SLOT(stopFlash()));
+    QTimer *flashTimer = new QTimer(lightState);
+    flashTimer->setInterval(FLASH_TIME);
+    flashTimer->setSingleShot(true);
+
+    QState *alwaysOnState = new QState(lightState);
+    alwaysOnState->connect(alwaysOnState, SIGNAL(entered()), timer, SLOT(start()));
+
+    QState *flashState = new QState(lightState);
+    flashState->connect(flashState, SIGNAL(entered()), lightWidget, SLOT(startFlash()));
+    flashState->connect(flashState, SIGNAL(entered()), flashTimer, SLOT(start()));
+    flashState->connect(flashState, SIGNAL(exited()), lightWidget, SLOT(stopFlash()));
+    alwaysOnState->addTransition(timer, SIGNAL(timeout()), flashState);
 
     QFinalState *done = new QFinalState(lightState);
-    timingState->addTransition(timer, SIGNAL(timeout()), done);
+    flashState->addTransition(flashTimer, SIGNAL(timeout()), done);
 
     lightState->connect(lightState, SIGNAL(entered()), traficWidget, SLOT(startCounter()));
-    lightState->setInitialState(timingState);
+    lightState->connect(lightState, SIGNAL(entered()), lightWidget, SLOT(turnOn()));
+    lightState->connect(lightState, SIGNAL(exited()), lightWidget, SLOT(turnOff()));
+    lightState->setInitialState(alwaysOnState);
 
     return lightState;
 }
@@ -186,23 +200,25 @@ public:
         vbox->setMargin(0);
 
         QStateMachine *machine = new QStateMachine(this);
-        QState *red = createLightState(widget, widget->redLight(), 8000);
+        QState *red = createLightState(widget, widget->redLight(), 5000, machine);
         red->setObjectName("red");
-        QState *yellowRed2Green = createLightState(widget, widget->yellowLight(), 3000);
+#if IN_US
+        QState *yellowRed2Green = createLightState(widget, widget->yellowLight(), 3000, machine);
         yellowRed2Green->setObjectName("yellowRed2Green");
         red->addTransition(red, SIGNAL(finished()), yellowRed2Green);
-        QState *green = createLightState(widget, widget->greenLight(), 8000);
+        QState *green = createLightState(widget, widget->greenLight(), 5000, machine);
         green->setObjectName("green");
         yellowRed2Green->addTransition(yellowRed2Green, SIGNAL(finished()), green);
-        QState *yellowGreen2Red = createLightState(widget, widget->yellowLight(), 3000);
+#else
+        QState *green = createLightState(widget, widget->greenLight(), 5000, machine);
+        green->setObjectName("green");
+        red->addTransition(red, SIGNAL(finished()), green);
+#endif
+        QState *yellowGreen2Red = createLightState(widget, widget->yellowLight(), 3000, machine);
         yellowGreen2Red->setObjectName("yellowGreen2Red");
         green->addTransition(green, SIGNAL(finished()), yellowGreen2Red);
         yellowGreen2Red->addTransition(yellowGreen2Red, SIGNAL(finished()), red);
 
-        machine->addState(red);
-        machine->addState(yellowRed2Green);
-        machine->addState(green);
-        machine->addState(yellowGreen2Red);
         machine->setInitialState(red);
         machine->start();
     }
