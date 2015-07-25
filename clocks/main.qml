@@ -9,9 +9,11 @@ Rectangle {
     ListView {
         id: clockView
         anchors.fill: parent
+        focus: true
         orientation: ListView.Horizontal
         cacheBuffer: 2000
         highlightRangeMode: ListView.ApplyRange
+        snapMode: ListView.SnapToItem
 
         delegate: Content.Clock { city: cityName; shift: timeShift; }
         model: ListModel {
@@ -23,6 +25,15 @@ Rectangle {
             ListElement { cityName: "Mumbai"; timeShift: 5.5 }
             ListElement { cityName: "Brisbane"; timeShift: 10 }
         }
+
+        Keys.onPressed: {
+            if (event.key === Qt.Key_4 || event.key === Qt.Key_Up) {
+                clockView.decrementCurrentIndex()
+            } else if (event.key === Qt.Key_6 || event.key === Qt.Key_Down) {
+                clockView.incrementCurrentIndex()
+            }
+            console.log("key: " + event.key + ". index: " + clockView.currentIndex)
+        }
     }
 
     /* left arrow */
@@ -33,7 +44,12 @@ Rectangle {
         rotation: -90
         source: "content/arrow.png"
         opacity: clockView.atXBeginning ? 0 : 0.8
-        Behavior on opacity { NumberAnimation { duration: 500 } }
+        Behavior on opacity { NumberAnimation { duration: 200 } }
+
+        MouseArea {
+            anchors.fill: parent
+            onPressed: clockView.decrementCurrentIndex()
+        }
     }
     /* right arrow */
     Image {
@@ -43,6 +59,10 @@ Rectangle {
         rotation: 90
         source: "content/arrow.png"
         opacity: clockView.atXEnd ? 0 : 0.8
-        Behavior on opacity { NumberAnimation { duration: 500 } }
+        Behavior on opacity { NumberAnimation { duration: 200 } }
+        MouseArea {
+            anchors.fill: parent
+            onPressed: clockView.incrementCurrentIndex()
+        }
     }
 }
