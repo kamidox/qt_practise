@@ -106,14 +106,14 @@ QAbstractAnimation *createAnimation(QGraphicsWidget *w1,
     subGroup->addAnimation(anim);
 
     subGroup = new QSequentialAnimationGroup(animGroup);
-    subGroup->addPause(150);
+    subGroup->addPause(200);
     anim = new QPropertyAnimation(w2, "geometry");
     anim->setDuration(1000);
     anim->setEasingCurve(QEasingCurve::OutElastic);
     subGroup->addAnimation(anim);
 
     subGroup = new QSequentialAnimationGroup(animGroup);
-    subGroup->addPause(200);
+    subGroup->addPause(300);
     anim = new QPropertyAnimation(w1, "geometry");
     anim->setDuration(1000);
     anim->setEasingCurve(QEasingCurve::OutElastic);
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
     QStateMachine machine;
     QState *group = new QState();
     QTimer timer;
-    timer.setInterval(1250);
+    timer.setInterval(1500);
     timer.setSingleShot(true);
     QObject::connect(group, SIGNAL(entered()), &timer, SLOT(start()));
 
