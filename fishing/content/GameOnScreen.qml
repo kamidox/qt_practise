@@ -5,6 +5,9 @@ Item {
     width: 320
     height: 480
 
+    property int countdown: 10
+
+    // waves
     Image {
         id: frontWave
         anchors.top: parent.top
@@ -33,6 +36,7 @@ Item {
         }
     }
 
+    // sun lights
     Image {
         y: 0
         anchors.horizontalCenter: parent.horizontalCenter
@@ -59,11 +63,46 @@ Item {
         }
     }
 
+    // grid
     Image {
         x: 0; y: 0;
         source: "gfx/grid.png"
         opacity: 0.5
     }
 
+    // info bar
     InfoBar { width: parent.width; anchors.top: parent.top; anchors.topMargin: 50; }
+
+    GameCanvas {
+        id: canvas
+        anchors.left: parent.left
+        anchors.leftMargin: 32
+        anchors.top: parent.top
+        anchors.topMargin: 84
+
+        focus: true
+    }
+
+    // 3..2..1..GO
+    Timer {
+        id: countDownTimer
+        interval: 1000
+        repeat: true
+        running: gameOnScreen.countdown < 5
+        onTriggered: {
+            console.info("GameOnScreen: countdown=" + gameOnScreen.countdown);
+            gameOnScreen.countdown ++;
+        }
+    }
+    Repeater {
+        model: ["gfx/text-blank.png", "gfx/text-3.png", "gfx/text-2.png", "gfx/text-1.png", "gfx/text-go.png"]
+        delegate: Image {
+            visible: gameOnScreen.countdown == index
+            opacity: gameOnScreen.countdown == index ? 0.5 : 0.1
+            scale: gameOnScreen.countdown == index ? 1.0 : 0.0
+            source: modelData
+            Behavior on opacity { NumberAnimation {} }
+            Behavior on scale { NumberAnimation {} }
+        }
+    }
 }

@@ -68,10 +68,10 @@ Item {
 
     // start game button
     Image {
+        id: startButton
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 60
         anchors.horizontalCenter: parent.horizontalCenter
-
         source: "gfx/button-play.png"
 
         MouseArea {
@@ -80,6 +80,8 @@ Item {
                 console.info("startButtonClicked");
                 newGameScreen.startButtonClicked();
             }
+            onPressed: { startButton.opacity = 0.8 }
+            onReleased: { startButton.opacity = 1.0 }
         }
     }
 }

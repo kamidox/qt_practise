@@ -14,9 +14,13 @@ Item {
         y: -960
 
         GameOverScreen {}
-        GaveOnScreen {}
+        GameOnScreen { id: gameOnScreen }
         NewGameScreen {
-            onStartButtonClicked: view.y = -480
+            onStartButtonClicked: {
+                // start the game
+                view.y = -480
+                gameOnScreen.countdown = 0
+            }
         }
 
         Behavior on y {
