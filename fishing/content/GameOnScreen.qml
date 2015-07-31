@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import "Model.js" as Model
 
 Item {
     id: gameOnScreen
@@ -6,6 +7,7 @@ Item {
     height: 480
 
     property int countdown: 10
+    property var gameState
 
     // waves
     Image {
@@ -105,4 +107,6 @@ Item {
             Behavior on scale { NumberAnimation {} }
         }
     }
+
+    Component.onCompleted: gameState = Model.newGameState(canvas)
 }
