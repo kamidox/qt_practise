@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import "Model.js" as Model
+import "tower"
 
 Item {
     id: canvas
@@ -11,7 +12,7 @@ Item {
     property int rows: 4
     property int cols: 6
 
-    // game params
+    // game states
     property int score: 0
     property int coins: 100
     property int lives: 3
@@ -19,8 +20,9 @@ Item {
     Image {
         id: towerMenu
         x: -32
-        z: 1010
         visible: false
+        scale: 0.9
+        opacity: 0.7
         source: "gfx/dialog.png"
 
         property int targetRow: 0
@@ -31,9 +33,9 @@ Item {
             targetCol = Model.col(x)
             // y position of tower menu
             if (targetRow == 0) {
-                towerMenu.y = cellSize
+                towerMenu.y = cellSize - 10
             } else {
-                towerMenu.y = (targetRow - 1) * cellSize
+                towerMenu.y = (targetRow - 1) * cellSize - 10
             }
             towerMenu.visible = true
         }
@@ -42,10 +44,18 @@ Item {
             towerMenu.visible = false
         }
 
+        states: State {
+            name: "shown"; when: towerMenu.visible
+            PropertyChanges { target: towerMenu; scale: 1.0; opacity: 1.0 }
+        }
+
+        transitions: Transition {
+            NumberAnimation { properties: "scale, opacity"; duration: 500; easing.type: Easing.OutElastic }
+        }
+
         Row {
             id: towerRow
             anchors.centerIn: parent
-            y: 1010
             spacing: 8
             TowerBuilder {
                 width: cellSize
@@ -76,9 +86,9 @@ Item {
         Image {
             id: towerPointBottom
             anchors.top: towerRow.bottom
-            anchors.topMargin: 4
-            x: towerMenu.targetCol * canvas.cellSize
-            z: 1009
+            anchors.topMargin: 6
+            opacity: 0.9
+            x: 32 + towerMenu.targetCol * (towerRow.width / 4)
             visible: towerMenu.targetRow != 0
             source: "gfx/dialog-pointer.png"
         }
@@ -86,9 +96,9 @@ Item {
         Image {
             id: towerPointTop
             anchors.bottom: towerRow.top
-            anchors.bottomMargin: 4
-            x: towerMenu.targetCol * canvas.cellSize
-            z: 1009
+            anchors.bottomMargin: 6
+            opacity: 0.9
+            x: 32 + towerMenu.targetCol * (towerRow.width / 4)
             visible: towerMenu.targetRow == 0
             rotation: 180
             transformOrigin: Item.Center
@@ -102,6 +112,7 @@ Item {
             if (towerMenu.visible) {
                 towerMenu.close();
             } else {
+                helpButton.visible = false
                 towerMenu.open(mouse.x, mouse.y)
             }
         }
@@ -134,11 +145,16 @@ Item {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                helpButton.visible = true;
                 helpMessage.visible = false;
             }
         }
         Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutQuad} }
     }
+
+    Fish { row: 0; col: 0 }
+    TowerMelee { row: 0; col: 1 }
+    TowerShooter { row: 0; col: 2 }
+    TowerBomb { row: 1; col: 3 }
+    TowerStar { row: 1; col: 1 }
 }
 
