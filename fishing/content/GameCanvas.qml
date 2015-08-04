@@ -16,7 +16,24 @@ Item {
     property int score: 0
     property int coins: 100
     property int lives: 3
+    property bool gameOver: false
+    property bool gameRunning: false
 
+    property var towers
+    property var fishs
+
+    function fleshState() {
+        coins = 100
+        score = 0
+        lives = 3
+        gameOver = false
+        gameRunning = false
+        towerMenu.visible = false
+        helpButton.visible = true
+        helpMessage.visible = false
+    }
+
+    // tower builder menu
     Image {
         id: towerMenu
         x: -32
