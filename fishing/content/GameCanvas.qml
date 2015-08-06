@@ -4,13 +4,14 @@ import "tower"
 
 Item {
     id: canvas
-    width: rows * cellSize
-    height: cols * cellSize
+    z: 1000
+    width: cols * cellSize
+    height: rows * cellSize
 
     // consts
     property int cellSize: 64
-    property int rows: 4
-    property int cols: 6
+    property int rows: 6
+    property int cols: 4
 
     // game states
     property int score: 0
@@ -21,6 +22,8 @@ Item {
 
     property var towers
     property var fishs
+    property int waveIndex: 0
+    property int waveProgress: 0
 
     function fleshState() {
         coins = 100
@@ -28,6 +31,8 @@ Item {
         lives = 3
         gameOver = false
         gameRunning = false
+        waveIndex = 0
+        waveProgress = 0
         towerMenu.visible = false
         helpButton.visible = true
         helpMessage.visible = false
@@ -37,6 +42,7 @@ Item {
     Image {
         id: towerMenu
         x: -32
+        z: 1100
         visible: false
         scale: 0.9
         opacity: 0.7
@@ -154,6 +160,7 @@ Item {
 
     Image {
         id: helpMessage
+        z: 1500
         source: "gfx/help.png"
         anchors.fill: parent
         visible: false
@@ -168,7 +175,14 @@ Item {
         Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutQuad} }
     }
 
-    Fish { row: 0; col: 0 }
+    Timer {
+        interval: 16
+        repeat: true
+        running: true
+        onTriggered: Model.tick()
+    }
+
+    Fish { col: 0 }
     TowerMelee { row: 0; col: 1 }
     TowerShooter { row: 0; col: 2 }
     TowerBomb { row: 1; col: 3 }

@@ -13,13 +13,18 @@ Item {
         width: 320
         y: -960
 
-        GameOverScreen {}
+        GameOverScreen {
+            gameCanvas: gameOnScreen.gameState
+            onStartButtonClicked: {
+                // start the game
+                gameOnScreen.startGame()
+            }
+        }
         GameOnScreen { id: gameOnScreen }
         NewGameScreen {
             onStartButtonClicked: {
                 // start the game
-                view.y = -480
-                gameOnScreen.countdown = 0
+                gameOnScreen.startGame()
             }
         }
 
@@ -28,5 +33,17 @@ Item {
         }
     }
 
+    states: [
+        State {
+            name: "gameOn"
+            when: gameOnScreen.gameState.gameOver == false && gameOnScreen.gameState.gameRunning
+            PropertyChanges {target: view; y: -480}
+        },
+        State {
+            name: "gameOver"
+            when: gameOnScreen.gameState.gameOver
+            PropertyChanges {target: view; y: 0}
+        }
+    ]
 }
 

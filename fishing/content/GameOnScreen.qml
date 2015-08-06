@@ -9,6 +9,11 @@ Item {
     property int countdown: 10
     property var gameState
 
+    function startGame() {
+        gameOnScreen.countdown = 0
+        Model.startGame()
+    }
+
     // waves
     Image {
         id: frontWave
