@@ -92,16 +92,14 @@ function killFish(col, fish) {
     gameState.fishs[col].splice(idx, 1)
 }
 
-function row(x) {
-    return Math.floor(x / gameState.cellSize);
-}
-
-function col(y) {
-    return Math.floor(y / gameState.cellSize);
-}
-
-function towerIdx(x, y) {
-    return y + (x * gameState.rows)
+function killTower(row, col) {
+    var tower = gameState.towers[towerIdx(col, row)]
+    if (tower == null) {
+        return
+    }
+    tower.hp = 0
+    tower.die()
+    gameState.towers[towerIdx(col, row)] = null
 }
 
 function newFish(col) {
@@ -116,6 +114,46 @@ function newFish(col) {
 
     gameState.fishs[col].push(fish)
     return fish
+}
+
+function newTower(towerType, col, row) {
+    var tower = towerComponents[towerType].createObject(gameState,
+                {"row": row, "col": col})
+    if (tower == null) {
+        console.error("error to create tower")
+        return null
+    }
+    tower.fireCounter = tower.interval
+    tower.spawn()
+    return tower
+}
+
+function buildTower(towerType, col, row) {
+    if (gameState.towers[towerIdx(col, row)] != null) {
+        if (towerType < 0) {
+            gameState.towers[towerIdx(col, row)].sell()
+            gameState.towers[towerIdx(col, row)] = null
+        }
+    } else {
+        if (gameState.coins < towerData[towerType].cost) {
+            return
+        }
+        gameState.towers[towerIdx(col, row)] = newTower(towerType, col, row)
+        gameState.coins -= towerData[towerType].cost
+    }
+}
+
+
+function row(x) {
+    return Math.floor(x / gameState.cellSize);
+}
+
+function col(y) {
+    return Math.floor(y / gameState.cellSize);
+}
+
+function towerIdx(x, y) {
+    return y + (x * gameState.rows)
 }
 
 function tick() {
@@ -146,6 +184,36 @@ function tick() {
         }
     }
 
+    // tower attach
+    for (var k in gameState.towers) {
+        var tower = gameState.towers[k]
+        if (tower == null) {
+            continue
+        }
+        if (tower.fireCounter > 0) {
+            tower.fireCounter -= 1
+            continue
+        }
+        var column = tower.col
+        for (var f in gameState.fishs[column]) {
+            var fish = gameState.fishs[column][f]
+            if (fish.y < gameState.height
+                    && fish.y + fish.height > tower.y
+                    && fish.y - ((tower.row + 1) * gameState.cellSize) < tower.range * gameState.cellSize ) {
+                tower.fire()
+                tower.fireCounter = tower.interval
+                fish.hit()
+            }
+        }
+
+        // income
+        if (tower.income > 0) {
+            gameState.coins += tower.income
+            tower.fire()
+            tower.fireCounter = tower.interval
+        }
+    }
+
     // fish move
     for (var m = 0; m < gameState.cols; m ++) {
         for (var n = 0; n < gameState.fishs[m].length; n ++) {
@@ -160,8 +228,24 @@ function tick() {
                 }
                 continue
             }
-
-            fish.y = newPos
+            var tower = gameState.towers[towerIdx(m, row(newPos))]
+            if (tower != null) {
+                if (fish.y < tower.y + gameState.cellSize) {
+                    fish.y += fish.speed * 10
+                }
+                if (fish.fireCounter > 0) {
+                    fish.fireCounter -= 1
+                } else {
+                    fish.fire()
+                    fish.fireCounter = fish.interval
+                    tower.lives -= fish.damage
+                    if (tower.lives <= 0) {
+                        killTower(tower.row, tower.col)
+                    }
+                }
+            } else {
+                fish.y = newPos
+            }
         }
     }
 }

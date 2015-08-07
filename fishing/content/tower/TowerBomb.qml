@@ -1,13 +1,46 @@
 import QtQuick 2.0
+import "../Model.js" as Model
 
 TowerBase {
     id: towerBomb
 
     costs: 75
-    lives: 1
+    lives: 10
     damage: 10
-    range: 1
+    range: 0.4
     interval: 10
+
+    function fire() {
+        sprite.jumpTo("fire")
+    }
+
+    function finishFire() {
+        var sCol = Math.max(0, col - 1)
+        var eCol = Math.min(Model.gameState.cols - 1, col + 1)
+        var killList = new Array()
+        for (var i = sCol; i <= eCol; i ++) {
+            for (var j = 0; j < Model.gameState.fishs[i].length; j ++) {
+                if (Math.abs(Model.gameState.fishs[i][j].y - towerBomb.y ) < Model.gameState.cellSize * 2.5) {
+                    killList.push(Model.gameState.fishs[i][j])
+                }
+            }
+            while (killList.length > 0) {
+                Model.killFish(i, killList.pop())
+            }
+        }
+        Model.killTower(row, col)
+    }
+
+    function die() {
+        destroy()       // no blink for bomb
+    }
+
+    Timer {
+        id: animDelay
+        running: false
+        interval: fireState.frameCount * fireState.frameDuration
+        onTriggered: finishFire()
+    }
 
     SpriteSequence {
         id: sprite
@@ -26,6 +59,7 @@ TowerBase {
         }
 
         Sprite {
+            id: fireState
             name: "fire"
             source: "../gfx/bomb-action.png"
             frameCount: 6

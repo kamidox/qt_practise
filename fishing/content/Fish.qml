@@ -37,7 +37,7 @@ Item {
         }
     }
 
-    function ink() {
+    function inked() {
         if (lives > 0) {
             ink.jumpTo("dirty")
         }

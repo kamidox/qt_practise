@@ -99,6 +99,9 @@ Item {
         onTriggered: {
             console.info("GameOnScreen: countdown=" + gameOnScreen.countdown);
             gameOnScreen.countdown ++;
+            if (gameOnScreen.countdown == 4) {
+                Model.buildTower(3, 0, 0)
+            }
         }
     }
     Repeater {

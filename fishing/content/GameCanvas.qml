@@ -50,6 +50,7 @@ Item {
 
         property int targetRow: 0
         property int targetCol: 0
+        property bool targetCanBuild: true
 
         function open(x, y) {
             targetRow = Model.row(y)
@@ -60,6 +61,7 @@ Item {
             } else {
                 towerMenu.y = (targetRow - 1) * cellSize - 10
             }
+            targetCanBuild = (canvas.towers[Model.towerIdx(targetCol, targetRow)] == null)
             towerMenu.visible = true
         }
 
@@ -84,25 +86,45 @@ Item {
                 width: cellSize
                 height: cellSize
                 source: "gfx/dialog-melee.png"
-                cost: "20"
+                gameCanvas: canvas
+                col: towerMenu.targetCol
+                row: towerMenu.targetRow
+                canBuild: towerMenu.targetCanBuild
+                towerType: 0
+                onClicked: towerMenu.close()
             }
             TowerBuilder {
                 width: cellSize
                 height: cellSize
                 source: "gfx/dialog-shooter.png"
-                cost: "50"
+                gameCanvas: canvas
+                col: towerMenu.targetCol
+                row: towerMenu.targetRow
+                canBuild: towerMenu.targetCanBuild
+                towerType: 1
+                onClicked: towerMenu.close()
             }
             TowerBuilder {
                 width: cellSize
                 height: cellSize
                 source: "gfx/dialog-bomb.png"
-                cost: "75"
+                gameCanvas: canvas
+                col: towerMenu.targetCol
+                row: towerMenu.targetRow
+                canBuild: towerMenu.targetCanBuild
+                towerType: 2
+                onClicked: towerMenu.close()
             }
             TowerBuilder {
                 width: cellSize
                 height: cellSize
                 source: "gfx/dialog-factory.png"
-                cost: "25"
+                gameCanvas: canvas
+                col: towerMenu.targetCol
+                row: towerMenu.targetRow
+                canBuild: towerMenu.targetCanBuild
+                towerType: 3
+                onClicked: towerMenu.close()
             }
         }
 
@@ -143,6 +165,7 @@ Item {
 
     Image {
         id: helpButton
+        z: 1500
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
 
@@ -181,11 +204,5 @@ Item {
         running: true
         onTriggered: Model.tick()
     }
-
-    Fish { col: 0 }
-    TowerMelee { row: 0; col: 1 }
-    TowerShooter { row: 0; col: 2 }
-    TowerBomb { row: 1; col: 3 }
-    TowerStar { row: 1; col: 1 }
 }
 

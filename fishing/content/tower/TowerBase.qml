@@ -9,18 +9,20 @@ Item {
 
     property int col: 0
     property int row: 0
-    property int lives: 3
+    property real lives: 3
     property int costs: 0
     property int income: 0
-    property int range: 0
-    property int damage: 0
+    property real range: 0
+    property real damage: 0
     property int interval: 0
+    property int fireCounter: 0
 
     function fire() {}
     function die() {
         flashAnim.start()
         destroy(1000)
     }
+    function spawn() { } //After all game properties are set
 
     SequentialAnimation on opacity {
         id: flashAnim
